@@ -13,30 +13,30 @@ export async function Sandbox({ offerings, context, error }: { offerings: Off[];
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="grid content-start gap-4">
+      <div className="grid min-w-0 grid-cols-1 content-start gap-4">
         {error && <Notice tone="danger">{error}</Notice>}
         <Notice tone="warn">Sample data only. Outputs are simulated and are not approved credit or business decisions.</Notice>
         {offerings.map((o) => (
           <Card key={o.id}>
             <p className="font-semibold">{o.name}</p>
-            <div className="mt-3 grid gap-3">
+            <div className="mt-3 grid grid-cols-1 gap-3">
               {(SCENARIOS[o.slug] ?? []).map((s) => (
                 <form key={s.id} action={runSandbox} className="rounded-xl border border-line p-3">
                   <input type="hidden" name="context" value={context} />
                   <input type="hidden" name="offering" value={o.slug} />
                   <input type="hidden" name="scenario" value={s.id} />
-                  <div className="flex items-start justify-between gap-3">
-                    <div><p className="font-medium">{s.name} <Badge>synthetic</Badge></p><p className="text-sm text-muted">{s.description}</p></div>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0"><p className="font-medium">{s.name} <Badge>synthetic</Badge></p><p className="text-sm text-muted">{s.description}</p></div>
                     <Button variant="outline">Run</Button>
                   </div>
-                  <pre className="mt-2 overflow-x-auto rounded bg-bg p-2 text-xs">{JSON.stringify(s.inputs)}</pre>
+                  <pre className="mt-2 whitespace-pre-wrap break-all rounded bg-bg p-2 text-xs">{JSON.stringify(s.inputs)}</pre>
                 </form>
               ))}
             </div>
           </Card>
         ))}
       </div>
-      <div className="grid content-start gap-3">
+      <div className="grid min-w-0 grid-cols-1 content-start gap-3">
         <p className="font-semibold">Your runs</p>
         {!runs?.length && <Empty title="No runs yet" />}
         {runs?.map((r) => {

@@ -17,6 +17,15 @@ export const SCENARIOS: Record<string, Scenario[]> = {
   "similar-portfolio-intelligence": [
     { id: "peer-match", name: "Peer segment match", description: "Compare to a synthetic historical segment.", inputs: { dscr_x100: 150, segment_dscr_x100: 165, segment_default_pct: 3 } },
   ],
+  "rejection-intelligence": [
+    { id: "reasons", name: "Quarterly declines by reason", description: "Synthetic decline log for one quarter.", inputs: { declines: 420, affordability: 160, documentation: 110, bureau: 90, policy_rule: 60, rule_threshold_change: 5 } },
+  ],
+  "document-intelligence": [
+    { id: "statements", name: "Bank statement batch", description: "Synthetic batch of uploaded statements.", inputs: { documents: 50, classified: 48, fields_extracted: 1150, fields_low_confidence: 37 } },
+  ],
+  "persona-newsroom": [
+    { id: "cfo-brief", name: "CFO morning brief", description: "Synthetic news set, CFO persona.", inputs: { articles: 24, relevant: 7, draft_words: 220 } },
+  ],
   riva: [
     { id: "validation", name: "Quarterly return validation", description: "Synthetic report with mapped fields.", inputs: { fields: 120, missing: 4, out_of_range: 2 } },
   ],
@@ -53,6 +62,15 @@ export function runScenario(offering: string, s: Scenario): Output {
     }
     case "similar-portfolio-intelligence":
       return { headline: `Applicant DSCR is ${i.segment_dscr_x100 - i.dscr_x100 > 0 ? "below" : "above"} the matched segment median`, evidence: [`Segment default rate ${i.segment_default_pct}%`, "Matched on sector and size band (synthetic)"], caveat };
+    case "rejection-intelligence": {
+      const top = Math.round((i.affordability / i.declines) * 100);
+      const shift = Math.round(i.policy_rule * (i.rule_threshold_change / 20));
+      return { headline: `Affordability drives ${top}% of declines; a ${i.rule_threshold_change}-point threshold change would affect about ${shift} decisions`, evidence: [`Documentation ${i.documentation}`, `Bureau ${i.bureau}`, `Policy rule ${i.policy_rule}`], caveat };
+    }
+    case "document-intelligence":
+      return { headline: `${i.classified} of ${i.documents} documents classified; ${i.fields_low_confidence} fields routed to human validation`, evidence: [`${i.fields_extracted} fields extracted`, `${Math.round((i.fields_low_confidence / i.fields_extracted) * 1000) / 10}% need review`], caveat };
+    case "persona-newsroom":
+      return { headline: `${i.relevant} of ${i.articles} articles relevant to the persona; a ${i.draft_words}-word draft is ready for editing`, evidence: ["Draft is never published without human review", "Sources listed with the draft"], caveat };
     default:
       return { headline: `${i.missing + i.out_of_range} of ${i.fields} fields need attention`, evidence: [`${i.missing} missing`, `${i.out_of_range} out of range`], caveat };
   }

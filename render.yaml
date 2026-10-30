@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: azentio-fl-coordinator
+    runtime: python
+    plan: free
+    rootDir: federated
+    buildCommand: pip install uv && uv sync --no-dev
+    startCommand: uv run python -m azentio_fl.server
+    healthCheckPath: /health
+    envVars:
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FL_TRIGGER_SECRET
+        generateValue: true

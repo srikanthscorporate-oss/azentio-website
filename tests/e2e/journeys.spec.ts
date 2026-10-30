@@ -24,9 +24,13 @@ test("client sees own workspace, shared feed, AIRA citations", async ({ page }) 
   await expect(page.getByRole("heading", { name: "Northwind Bank (synthetic)" })).toBeVisible();
   await page.goto("/learning");
   await expect(page.getByText("Harvest-cycle borrowers need a season-aware baseline")).toBeVisible();
-  await page.getByPlaceholder("e.g. seasonal cash flow").fill("seasonal cash flow");
-  await page.getByRole("button", { name: "Ask" }).click();
-  await expect(page.getByText(/\[1\]/).first()).toBeVisible();
+  await page.getByRole("button", { name: "Ask AIRA" }).click();
+  await page.getByLabel("Message AIRA").fill("seasonal cash flow");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByRole("dialog").getByText("Sources", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
+  await page.reload();
+  await page.getByRole("button", { name: "Ask AIRA" }).click();
+  await expect(page.getByRole("dialog").getByText("You: seasonal cash flow")).toBeVisible(); // history kept for the session
   await page.goto("/employee");
   await expect(page).toHaveURL(/forbidden/);
   await page.goto("/moderation");

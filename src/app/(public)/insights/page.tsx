@@ -1,11 +1,13 @@
-import { createClient } from "@/lib/supabase/server";
+import { getPublicContent } from "@/lib/public-data";
 import { Card, Container, Empty, PageHeader, fmtDate } from "@/components/ui";
+
+// Public page: validated in dev to render an instant static shell.
+export const instant = true;
 
 export const metadata = { title: "Insights" };
 
 export default async function Insights() {
-  const supabase = await createClient();
-  const { data } = await supabase.from("content_items").select("id, title, body, created_at").eq("kind", "insight").eq("audience", "public").order("created_at", { ascending: false });
+  const data = await getPublicContent("insight");
   return (
     <Container className="pb-16">
       <PageHeader eyebrow="Explore" title="Insights" />

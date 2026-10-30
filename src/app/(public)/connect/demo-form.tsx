@@ -7,6 +7,14 @@ export function DemoForm({ offerings, selected }: { offerings: { slug: string; n
     <ActionForm action={requestDemo} submit="Request demo">
       {(s) => (
         <>
+          <Field name="interest" label="I'm interested in">
+            <select id="interest" name="interest" className="input" defaultValue="demo">
+              <option value="demo">A product demo</option>
+              <option value="collaboration">Collaboration</option>
+              <option value="ai_challenge">Sharing an AI challenge</option>
+              <option value="general">A general enquiry</option>
+            </select>
+          </Field>
           <Field name="name" label="Name" error={s.errors?.name}><input id="name" name="name" className="input" required /></Field>
           <Field name="email" label="Work email" error={s.errors?.email}><input id="email" name="email" type="email" className="input" required /></Field>
           <Field name="company" label="Company" error={s.errors?.company}><input id="company" name="company" className="input" required /></Field>

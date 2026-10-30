@@ -1,18 +1,20 @@
 import { requirePlatformRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { approveEmployee, createOrg, inviteToOrg, toggleEntitlement } from "@/app/actions/admin";
+import { setTicketStatus } from "@/app/actions/support";
 import { Button, Card, Container, Notice, PageHeader, label } from "@/components/ui";
 
 export default async function Admin({ searchParams }: PageProps<"/admin">) {
   const { error, link } = await searchParams;
   await requirePlatformRole("portal_admin");
   const supabase = await createClient();
-  const [{ data: orgs }, { data: offerings }, { data: ents }, { data: pending }, { data: audit }] = await Promise.all([
+  const [{ data: orgs }, { data: offerings }, { data: ents }, { data: pending }, { data: audit }, { data: tickets }] = await Promise.all([
     supabase.from("organizations").select("id, name, kind, industry, region").order("name"),
     supabase.from("offerings").select("id, name").order("name"),
     supabase.from("entitlements").select("org_id, offering_id"),
     supabase.from("memberships").select("id, created_at, profiles(email)").eq("status", "pending"),
     supabase.from("audit_log").select("id, action, entity, entity_id, data, created_at, actor_id").order("id", { ascending: false }).limit(40),
+    supabase.from("support_tickets").select("id, subject, priority, status, external_ref, created_at, organizations(name)").neq("status", "resolved").order("created_at"),
   ]);
   const has = (o: string, f: string) => ents?.some((e) => e.org_id === o && e.offering_id === f);
 
@@ -33,7 +35,7 @@ export default async function Admin({ searchParams }: PageProps<"/admin">) {
       )}
 
       <h2 className="mb-3 font-semibold">Client organisations & entitlements</h2>
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-line text-left"><th className="p-3">Organisation</th>{offerings?.map((o) => <th key={o.id} className="p-3 font-medium">{o.name}</th>)}<th className="p-3">Invite admin</th></tr></thead>
           <tbody>
@@ -60,8 +62,25 @@ export default async function Admin({ searchParams }: PageProps<"/admin">) {
         </form>
       </Card>
 
+      <h2 className="mb-3 mt-10 font-semibold">Open support tickets</h2>
+      {!tickets?.length ? <p className="text-sm text-muted">None.</p> : (
+        <div className="grid gap-2">
+          {tickets.map((t) => (
+            <Card key={t.id} className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0"><p className="font-medium">{t.subject}</p>
+                <p className="text-xs text-muted">{(t.organizations as unknown as { name: string }).name} · {t.priority} priority · {label(t.status)}{t.external_ref && ` · ref ${t.external_ref}`}</p></div>
+              <form action={setTicketStatus} className="flex gap-2">
+                <input type="hidden" name="id" value={t.id} />
+                {t.status === "open" && <Button name="status" value="in_progress" variant="outline">Start</Button>}
+                <Button name="status" value="resolved" variant="outline">Resolve</Button>
+              </form>
+            </Card>
+          ))}
+        </div>
+      )}
+
       <h2 className="mb-3 mt-10 font-semibold">Audit log (latest 40)</h2>
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface text-xs">
+      <div className="overflow-x-auto rounded-xl border border-line bg-surface text-xs">
         <table className="w-full">
           <thead><tr className="border-b border-line text-left"><th className="p-2">When</th><th className="p-2">Action</th><th className="p-2">Entity</th><th className="p-2">Data</th></tr></thead>
           <tbody>{audit?.map((a) => (

@@ -19,11 +19,11 @@ export default async function ClientDashboard() {
   return (
     <Container className="pb-16">
       <PageHeader eyebrow="Client workspace" title={org.orgName}
-        actions={<><ButtonLink href="/client/observations/new">New contribution</ButtonLink>{isAdmin && <ButtonLink href="/client/members" variant="outline">Members</ButtonLink>}</>}>
+        actions={<><ButtonLink href="/client/observations/new">New contribution</ButtonLink><ButtonLink href="/client/resources" variant="outline">Resources</ButtonLink><ButtonLink href="/client/support" variant="outline">Support</ButtonLink>{isAdmin && <ButtonLink href="/client/members" variant="outline">Members</ButtonLink>}</>}>
         Signed in as {viewer.name} · {org.roles.map(label).join(", ")}
       </PageHeader>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Stat label="Drafts" value={count("draft")} />
         <Stat label="Awaiting review" value={count("submitted") + count("returned")} hint={count("returned") ? `${count("returned")} need clarification` : undefined} />
         <Stat label="Published" value={count("published")} />
@@ -73,7 +73,7 @@ export default async function ClientDashboard() {
             ))}
           </div>
         )}
-        <p className="mt-3 text-sm"><Link href="/learning" className="underline">Browse the shared learning feed →</Link></p>
+        <p className="mt-3 text-sm"><Link href="/learning" className="underline">Browse the shared learning feed</Link></p>
       </section>
     </Container>
   );

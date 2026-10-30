@@ -1,5 +1,8 @@
 import { Card, Container, PageHeader } from "@/components/ui";
 
+// Public page: validated in dev to render an instant static shell.
+export const instant = true;
+
 export const metadata = { title: "About" };
 
 const STEPS = [
@@ -26,6 +29,15 @@ export default function About() {
             <p className="mt-1 text-sm text-muted">{d}</p>
           </Card>
         ))}
+      </div>
+      <div className="mt-10 max-w-3xl rounded-[10px] border border-line p-6">
+        <h2 className="title-sm">Withdrawal service level</h2>
+        <p className="mt-2 text-sm text-muted">
+          Withdrawing a shared contribution takes effect immediately: in the same database transaction it leaves the shared feed,
+          search, themes, idea evidence and AIRA answers, well inside the 60-second requirement. Our production commitment for any
+          future external search index or cache is removal within 60 seconds. Copies already viewed by others, and anything copied
+          outside the portal, cannot be recalled automatically. Withdrawal never claims to undo a model that has already been trained.
+        </p>
       </div>
       <p className="mt-8 max-w-3xl text-sm text-muted">
         The collective learning hub shares reviewed observations; it does not train models. Federated machine learning, where

@@ -36,7 +36,7 @@ export default async function Idea({ params, searchParams }: PageProps<"/employe
           </Card>
           <Card>
             <p className="mb-2 font-semibold">Audited status history</p>
-            {hist?.map((h, k) => <p key={k} className="text-sm">{h.from_status ? label(h.from_status) : "Start"} → <b>{label(h.to_status)}</b> · {fmtDate(h.created_at)}{h.note && <span className="text-muted">: {h.note}</span>}</p>)}
+            {hist?.map((h, k) => <p key={k} className="text-sm">{h.from_status ? label(h.from_status) : "Start"} to <b>{label(h.to_status)}</b> · {fmtDate(h.created_at)}{h.note && <span className="text-muted">: {h.note}</span>}</p>)}
           </Card>
         </div>
         <Card className="content-start">

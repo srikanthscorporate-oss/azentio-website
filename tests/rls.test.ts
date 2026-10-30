@@ -101,3 +101,42 @@ test("theme stats count distinct orgs and respect minimum cohort", async () => {
   const { data } = await c.rpc("theme_stats", { p_theme: themes![0].id });
   assert.equal(data![0].org_count, 3);
 });
+
+test("federated programme: clients cannot read runs or decide models; only client admins set their own org's consent", async () => {
+  const client = await as("analyst@northwind.example");
+  const { data: runs } = await client.from("fl_runs").select("id");
+  assert.equal(runs!.length, 0);
+  const { error: e1 } = await client.rpc("set_fl_participation", { p_org: "00000000-0000-0000-0000-000000000000", p_status: "withdrawn" });
+  assert.match(e1!.message, /client admin/);
+  const emp = await as("employee@azentio.com");
+  const { data: models } = await emp.from("fl_models").select("id").limit(1);
+  assert.ok(models!.length >= 1);
+  const { error: e2 } = await emp.rpc("decide_fl_model", { p_model: models![0].id, p_action: "approve", p_note: "x" });
+  assert.match(e2!.message, /product owner or portal admin/);
+});
+
+test("comments and bookmarks stay within the viewer's scope", async () => {
+  const c = await as("user@atlas.example");
+  const { data: other } = await c.from("bookmarks").select("*");
+  const { data: me } = await c.auth.getUser();
+  assert.ok(other!.every((b) => b.user_id === me.user!.id));
+  const { error } = await c.from("comments").insert({ shared_id: "00000000-0000-0000-0000-000000000000", body: "hello there" });
+  assert.ok(error, "comment on a non-visible parent succeeded");
+});
+
+test("support tickets are private to the organisation and cannot be forged for another tenant", async () => {
+  const nw = await as("analyst@northwind.example");
+  const { data: mem } = await nw.from("memberships").select("org_id").limit(1);
+  const { data: t, error } = await nw.from("support_tickets").insert({ org_id: mem![0].org_id, subject: "RLS test ticket", body: "Checking tenant isolation of tickets." }).select("id").single();
+  assert.ifError(error);
+  const meridian = await as("lead@meridian.example");
+  const { data: seen } = await meridian.from("support_tickets").select("id").eq("id", t!.id);
+  assert.equal(seen!.length, 0, "another tenant could read the ticket");
+  const { data: mOrg } = await meridian.from("memberships").select("org_id").limit(1);
+  const { error: forged } = await nw.from("support_tickets").insert({ org_id: mOrg![0].org_id, subject: "Forged ticket", body: "Should be rejected by RLS." });
+  assert.ok(forged, "ticket forged into another organisation");
+  await nw.from("support_tickets").delete().eq("id", t!.id); // tidy up (no delete policy: row stays, harmless)
+  const { data: digests } = await meridian.from("digest_subscriptions").select("user_id");
+  const { data: me } = await meridian.auth.getUser();
+  assert.ok(digests!.every((d) => d.user_id === me.user!.id));
+});

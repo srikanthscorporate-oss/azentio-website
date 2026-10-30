@@ -1,144 +1,207 @@
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { ButtonLink, Container } from "@/components/ui";
+import { ArrowRight, ArrowUpRight, Plus } from "lucide-react";
+import { getOfferings, getPublicContent } from "@/lib/public-data";
+import { HeroVideo } from "@/components/hero-video";
+import { SmoothScroll } from "@/components/smooth-scroll";
+import { HScroll } from "@/components/h-scroll";
+import { HoverList } from "@/components/hover-list";
 import { LiteYouTube } from "@/components/lite-youtube";
+import { BuildCta } from "@/components/sections";
+import { ProductMock } from "@/components/product-mock";
 import { videoCategory, videoIdFromUrl } from "@/lib/videos";
 
-const CAPABILITIES = ["Intelligent Decisioning", "Document Intelligence", "AI Agents & Automation", "Analytics & Insights", "Configurable AI Platforms", "Trusted Enterprise AI"];
+// Public page: validated in dev to render an instant static shell.
+export const instant = true;
 
-const PROCESS = [
-  ["Contribute", "Clients record market observations as private drafts. Saving never shares anything."],
-  ["Review", "Moderators publish a separate, de-identified copy, only with explicit consent."],
-  ["Learn", "Themes count distinct organisations, with limitations stated, never popularity as proof."],
-  ["Improve", "Product owners link evidence to improvement ideas and report status back in plain language."],
-];
+const HERO_VIDEO = "j7M-k4HnOJc"; // Azentio Loan Origination walkthrough: clean 3D brand footage in the opening seconds
 
-const TRUST = ["Identity & SSO", "Role-based access", "Tenant isolation", "Auditability", "Data protection", "Human oversight"];
+const CAPABILITIES = [
+  ["Intelligent Decisioning", "Turn policies, evidence and data into informed recommendations."],
+  ["Document Intelligence", "Extract, interpret and validate complex information."],
+  ["AI Agents & Automation", "Connect intelligence with workflows and human oversight."],
+  ["Analytics & Insights", "Transform data into actionable intelligence."],
+  ["Configurable AI Platforms", "Adapt solutions to evolving business requirements."],
+  ["Trusted Enterprise AI", "Design for security, accountability and traceability."],
+] as const;
+
+const TRUST = ["Identity & SSO", "Role-Based Access", "Auditability", "Data Protection", "Human Oversight", "Secure Deployment"];
+
+const LEARNING = [
+  ["Contribute privately", "Clients record observations as private drafts. Saving never shares anything."],
+  ["Reviewed and de-identified", "Moderators publish a separate reviewed copy, only with explicit consent."],
+  ["Themes with honest numbers", "Distinct organisations are counted, and small groups are suppressed."],
+  ["Improvements, reported back", "Product owners link evidence to ideas and share plain-language status."],
+] as const;
+
+// Panel colours for the product strip, drawn from the azentio palette (light panels use navy text).
+const PANELS = [
+  ["#69d393", "dark"], ["#2f6f6a", "light"], ["#d9e4e1", "dark"], ["#171b3a", "light"],
+  ["#b8efb5", "dark"], ["#4e8c7a", "light"], ["#c7d3dd", "dark"], ["#10132c", "light"],
+] as const;
 
 export default async function Home() {
-  const supabase = await createClient();
-  const [{ data: offerings }, { data: videos }] = await Promise.all([
-    supabase.from("offerings").select("slug, name, category, tagline").eq("is_public", true).order("name"),
-    supabase.from("content_items").select("id, title, external_url").eq("kind", "video").eq("audience", "public").order("created_at", { ascending: false }).limit(4),
-  ]);
-  const vids = (videos ?? []).map((v) => ({ ...v, vid: videoIdFromUrl(v.external_url) })).filter((v) => v.vid);
-  const [featured, ...stories] = vids;
+  const [offerings, videos, insights] = await Promise.all([getOfferings(), getPublicContent("video"), getPublicContent("insight")]);
+  const stories = videos.map((v) => ({ ...v, vid: videoIdFromUrl(v.external_url) })).filter((v) => v.vid).map((v) => ({ ...v, cat: videoCategory(v.vid) }));
+  const counts = stories.reduce<Record<string, number>>((a, s) => ({ ...a, [s.cat]: (a[s.cat] ?? 0) + 1 }), {});
+  const [big, ...small] = stories;
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-navy text-white">
-        <div aria-hidden className="pointer-events-none absolute -right-40 -top-40 h-[36rem] w-[36rem] rounded-full bg-brand/20 blur-3xl" />
-        <Container className="relative flex min-h-[78vh] flex-col justify-between py-16">
-          <p className="eyebrow text-white/60">Enterprise AI for financial services</p>
-          <div>
-            <h1 className="display-xl max-w-5xl">
-              Build intelligence.<br /><span className="text-brand">Create shared value.</span>
-            </h1>
-            <div className="mt-10 flex flex-wrap items-end justify-between gap-8">
-              <p className="max-w-xl text-lg text-white/70">
-                Explainable AI products for credit, reporting and financial analysis, plus a governed portal where clients and
-                Azentio learn together without giving up control of their information.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <ButtonLink href="/products" variant="brand">Explore products <ArrowUpRight size={16} /></ButtonLink>
-                <ButtonLink href="/connect" variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">Request a demo</ButtonLink>
-              </div>
-            </div>
+      <SmoothScroll />
+      {/* 1. Hero: full-bleed video, detail labels at mid height, headline bottom left */}
+      <section className="relative min-h-[100svh] overflow-hidden text-white">
+        <HeroVideo id={HERO_VIDEO} start={2} end={18} />
+        <div className="relative grid min-h-[100svh] grid-rows-[1fr_auto_1fr] px-4 pb-10 pt-24 md:px-8 lg:px-12">
+          <div />
+          <div className="flex flex-wrap items-center gap-x-16 gap-y-2 text-sm font-medium">
+            <span>Enterprise AI + Collaboration</span>
+            <span className="hidden sm:inline">A Governed Approach</span>
+            <a href="#products" className="group ml-auto hidden items-center gap-3 md:flex">Scroll to explore <span className="circle-btn"><ArrowRight size={14} aria-hidden /></span></a>
           </div>
-          <p className="eyebrow mt-12 flex items-center gap-2 text-white/50"><ArrowDown size={14} /> Scroll to explore</p>
-        </Container>
-        <div className="overflow-hidden border-t border-white/10 py-5" aria-hidden>
-          <div className="marquee flex w-max gap-12 whitespace-nowrap text-2xl text-white/40">
-            {[...CAPABILITIES, ...CAPABILITIES].map((c, i) => <span key={i}>{c} <span className="text-brand">✦</span></span>)}
+          <div className="flex flex-col justify-end">
+            <p className="eyebrow mb-4 text-brand">Intelligence begins with imagination</p>
+            <h1 className="display-xl max-w-5xl">Build Intelligence.<br />Create Impact.</h1>
           </div>
         </div>
       </section>
 
-      {/* Process */}
-      <section className="border-b border-line bg-surface">
-        <Container className="py-24">
-          <p className="eyebrow text-muted" data-reveal>How collective learning works</p>
-          <h2 className="display-lg mt-4 max-w-4xl" data-reveal>Contribute. Review. Learn. Improve.</h2>
-          <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-4">
-            {PROCESS.map(([t, d], i) => (
-              <div key={t} className="bg-surface p-6" data-reveal style={{ transitionDelay: `${i * 80}ms` }}>
-                <p className="eyebrow text-brand-ink">0{i + 1}</p>
-                <p className="mt-10 text-2xl font-medium tracking-tight">{t}</p>
-                <p className="mt-2 text-sm text-muted">{d}</p>
-              </div>
-            ))}
-          </div>
-        </Container>
+      {/* 2. Products: pinned horizontal strip (lpas market cards) */}
+      <div id="products" className="scroll-mt-0">
+        <HScroll label="Products">
+          {offerings.map((o, i) => {
+            const [bg, tone] = PANELS[i % PANELS.length];
+            const light = tone === "light";
+            return (
+              <article key={o.slug} className="grid w-full grid-cols-[72%_28%] lg:h-full lg:w-[min(52rem,62vw)] lg:grid-cols-1 lg:grid-rows-[minmax(0,1fr)_15rem]">
+                <div className="hero-glow relative order-2 min-h-44 overflow-hidden lg:order-1">
+                  <div aria-hidden className="absolute inset-0 opacity-30 [background-image:linear-gradient(#b8efb5_1px,transparent_0),linear-gradient(90deg,#b8efb5_1px,transparent_0)] [background-size:3rem_3rem] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
+                  <div className="hidden lg:block"><ProductMock slug={o.slug} /></div>
+                  <p className="absolute bottom-4 right-5 hidden max-w-xs text-right text-sm text-white/70 lg:block">{o.category}</p>
+                </div>
+                <Link href={`/products/${o.slug}`} style={{ backgroundColor: bg }}
+                  className={`group order-1 flex flex-col justify-between gap-6 p-5 lg:order-2 lg:p-8 ${light ? "text-white" : "text-navy"}`}>
+                  <span className="circle-btn self-end"><Plus size={16} aria-hidden /></span>
+                  <span className="flex flex-wrap items-end justify-between gap-4">
+                    <span>
+                      <span className="display-md block">{o.name}</span>
+                      <span className="mt-2 block text-xs">{i + 1} / {offerings.length}</span>
+                    </span>
+                    <span className="max-w-[14rem] text-right text-sm">{o.tagline}</span>
+                  </span>
+                </Link>
+              </article>
+            );
+          })}
+        </HScroll>
+      </div>
+
+      {/* 3. Intro statement */}
+      <section className="grid-template py-24 lg:py-32">
+        <h2 className="display-lg intro-title mb-12" data-reveal>
+          Intelligence, Engineered for the Real World.
+        </h2>
+        <p className="intro-tag font-semibold" data-reveal>Decision. Document. Agent. Analytics.</p>
+        <div className="intro-body mt-6 grid gap-8 md:mt-0" data-reveal>
+          <p className="title-sm text-muted">
+            AI creates value when it moves beyond experimentation and becomes part of how businesses operate. We build intelligent
+            applications combining domain understanding, advanced AI, intuitive experiences and enterprise-grade engineering.
+          </p>
+          <Link href="/about" className="group line-link justify-self-start">How we work <span className="circle-btn text-muted"><ArrowRight size={14} aria-hidden /></span></Link>
+        </div>
       </section>
 
-      {/* Products as a large list */}
-      <Container className="py-24">
-        <div className="flex flex-wrap items-end justify-between gap-4" data-reveal>
-          <div><p className="eyebrow text-muted">Products</p><h2 className="display-lg mt-4">What we build</h2></div>
-          <Link href="/products" className="sweep pb-1 text-sm">All products</Link>
-        </div>
-        <ul className="mt-12 border-t border-line">
-          {offerings?.map((o) => (
-            <li key={o.slug} className="border-b border-line" data-reveal>
-              <Link href={`/products/${o.slug}`} className="group grid items-center gap-2 py-7 md:grid-cols-[1fr_1.2fr_auto]">
-                <span className="display-md transition-colors duration-500 group-hover:text-brand-ink">{o.name}</span>
-                <span className="text-muted"><span className="eyebrow mr-3 text-ink">{o.category}</span>{o.tagline}</span>
-                <ArrowUpRight className="transition-transform duration-500 [transition-timing-function:var(--ease-inout)] group-hover:-translate-y-1 group-hover:translate-x-1" />
-              </Link>
+      {/* 4. Capabilities as ruled rows */}
+      <section className="grid-template pb-24">
+        <h2 className="display-md col-main mb-10" data-reveal>Intelligence in Every Layer.</h2>
+        <ul className="col-main border-t border-line-strong">
+          {CAPABILITIES.map(([t, d], i) => (
+            <li key={t} className="grid gap-x-6 gap-y-1 border-b border-line-strong py-5 md:grid-cols-[4rem_1.2fr_1.6fr]" data-reveal>
+              <span className="text-xs font-semibold text-muted">{String(i + 1).padStart(2, "0")}</span>
+              <span className="title-sm">{t}</span>
+              <span className="text-muted">{d}</span>
             </li>
           ))}
         </ul>
-      </Container>
+      </section>
 
-      {/* Video */}
-      {featured && (
-        <section className="bg-navy text-white">
-          <Container className="py-24">
-            <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:items-center">
-              <div data-reveal>
-                <p className="eyebrow text-white/50">{videoCategory(featured.vid)}</p>
-                <h2 className="display-md mt-4">{featured.title}</h2>
-                <Link href="/media" className="sweep mt-8 inline-block pb-1 text-sm text-white/70">All videos</Link>
-              </div>
-              <div data-reveal><LiteYouTube id={featured.vid!} title={featured.title} /></div>
-            </div>
-            {stories.length > 0 && (
-              <div className="mt-16 grid gap-8 md:grid-cols-3">
-                {stories.map((s) => (
-                  <div key={s.id} data-reveal>
-                    <LiteYouTube id={s.vid!} title={s.title} />
-                    <p className="eyebrow mt-4 text-white/50">{videoCategory(s.vid)}</p>
-                    <p className="mt-1 font-medium">{s.title}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Container>
+      {/* 5. Stories: one large and two small chamfered cards */}
+      {big && (
+        <section className="grid-template pb-24">
+          <div className="col-main flex flex-wrap items-end justify-between gap-6 border-b border-line-strong pb-4">
+            <h2 className="display-md">A selection of our stories</h2>
+            <nav aria-label="Story categories" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <Link href="/media" className="line-link">All stories<sup className="ml-0.5">{stories.length}</sup></Link>
+              {Object.entries(counts).map(([c, n]) => <Link key={c} href={`/media?c=${encodeURIComponent(c)}`} className="line-link text-muted">{c}<sup className="ml-0.5">{n}</sup></Link>)}
+            </nav>
+          </div>
+          <div className="col-main mt-8 grid gap-x-3 gap-y-10 md:grid-cols-2 lg:grid-cols-[1fr_1fr_2fr]">
+            {small.slice(0, 2).map((s) => (
+              <article key={s.id} className="self-end">
+                <div data-image-reveal className="overflow-hidden"><LiteYouTube id={s.vid!} title={s.title} /></div>
+                <p className="mt-3 font-medium">{s.title}</p>
+                <p className="text-xs text-muted">{s.cat}</p>
+              </article>
+            ))}
+            <article className="md:col-span-2 lg:col-span-1">
+              <div data-image-reveal className="chamfer-br overflow-hidden"><LiteYouTube id={big.vid!} title={big.title} thumbnail={big.vid === "QW3TEZJYb0c" ? "/images/gcc-lending-webinar.jpg" : undefined} /></div>
+              <p className="mt-3 font-medium">{big.title}</p>
+              <p className="text-xs text-muted">{big.cat}</p>
+            </article>
+          </div>
         </section>
       )}
 
-      {/* Trust + CTA */}
-      <Container className="py-24">
-        <div className="grid gap-12 lg:grid-cols-2">
-          <div data-reveal>
-            <p className="eyebrow text-muted">Trust by design</p>
-            <h2 className="display-lg mt-4">Governed, not just gated.</h2>
-            <p className="mt-6 max-w-lg text-muted">Access is enforced on the server for every page, API and media request. Shared learning is reviewed, de-identified and withdrawable.</p>
+      {/* 6. Trust + collective learning */}
+      <section className="bg-bg">
+        <div className="grid-template py-24">
+          <div className="col-main grid gap-12 lg:grid-cols-2">
+            <div data-reveal>
+              <p className="eyebrow text-brand-ink">Trust by design</p>
+              <h2 className="display-md mt-3">Innovation Without Compromising Trust.</h2>
+              <p className="mt-4 max-w-md text-muted">Enterprise AI must be as accountable as it is intelligent.</p>
+            </div>
+            <ul className="border-t border-line-strong">
+              {TRUST.map((t, i) => (
+                <li key={t} className="flex items-baseline gap-6 border-b border-line-strong py-4" data-reveal>
+                  <span className="text-xs font-semibold text-muted">{String(i + 1).padStart(2, "0")}</span><span className="title-sm">{t}</span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="grid grid-cols-2 gap-px self-end overflow-hidden rounded-2xl border border-line bg-line" data-reveal>
-            {TRUST.map((t) => <li key={t} className="bg-surface p-5 text-sm font-medium"><span className="mr-2 text-brand">●</span>{t}</li>)}
-          </ul>
-        </div>
-        <div className="mt-24 rounded-3xl bg-brand p-10 text-navy md:p-16" data-reveal>
-          <h2 className="display-lg max-w-3xl">Let's build intelligence together.</h2>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <ButtonLink href="/connect">Start a conversation <ArrowUpRight size={16} /></ButtonLink>
-            <ButtonLink href="/login" variant="outline" className="border-navy/20 bg-transparent">Client & employee sign in</ButtonLink>
+          <div className="col-main mt-24 grid gap-12 lg:grid-cols-2">
+            <div data-reveal>
+              <p className="eyebrow text-brand-ink">Collective learning</p>
+              <h2 className="display-md mt-3">Learning Together, Governed.</h2>
+            </div>
+            <ol className="border-t border-line-strong">
+              {LEARNING.map(([t, d], i) => (
+                <li key={t} className="grid gap-1 border-b border-line-strong py-5 sm:grid-cols-[3rem_1fr]" data-reveal>
+                  <span className="text-xs font-semibold text-muted">{String(i + 1).padStart(2, "0")}</span>
+                  <span><span className="title-sm block">{t}</span><span className="mt-1 block text-muted">{d}</span></span>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
-      </Container>
+      </section>
+
+      {/* 7. Latest insights (lpas updates list) */}
+      {!!insights.length && (
+        <section className="grid-template py-24">
+          <div className="col-main mb-8 flex items-end justify-between gap-4">
+            <h2 className="display-md">Latest insights</h2>
+            <Link href="/insights" className="line-link text-sm">All insights <ArrowUpRight size={14} aria-hidden /></Link>
+          </div>
+          <div className="col-main">
+            <HoverList rows={insights.map((a) => ({
+              href: "/insights", title: a.title, excerpt: a.body,
+              meta: new Date(a.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "2-digit" }).replaceAll("/", "."),
+            }))} />
+          </div>
+        </section>
+      )}
+
+      <BuildCta />
     </>
   );
 }

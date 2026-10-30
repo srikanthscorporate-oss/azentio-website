@@ -17,6 +17,9 @@ export default async function EmployeeHome() {
     ["/employee/live", "Live & recordings", "Employee-only broadcasts"],
     ["/learning", "Learning hub", "Approved shared learning and themes"],
     ["/employee/ideas", "Improvement ideas", "Themes linked to product improvements"],
+    ["/employee/experiments", "Experiments", "Submit prototypes and team work"],
+    ["/employee/knowledge", "Knowledge library", "Owned docs, release notes, review dates"],
+    ["/employee/federated", "Federated learning", "P2 programme runs and model registry"],
   ];
   return (
     <Container className="pb-16">
@@ -26,7 +29,7 @@ export default async function EmployeeHome() {
         <Stat label="Improvement ideas" value={ideas?.length ?? 0} />
         <Stat label="Assigned to you" value={mine.length} />
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
         {links.map(([h, t, d]) => <Link key={h} href={h}><Card className="h-full hover:border-brand"><p className="font-semibold">{t}</p><p className="text-sm text-muted">{d}</p></Card></Link>)}
       </div>
       <h2 className="mb-3 mt-10 font-semibold">Experiments, knowledge & internal notes</h2>

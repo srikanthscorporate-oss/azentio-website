@@ -15,7 +15,7 @@ export function ActionForm({ action, submit, children, className }: {
     <form action={formAction} className={className ?? "grid gap-4"}>
       {state.message && <Notice tone={state.ok ? "brand" : "danger"}>{state.message}</Notice>}
       {children(state)}
-      <div><Button disabled={pending}>{pending ? "Working…" : submit}</Button></div>
+      <div><Button disabled={pending}>{pending ? "Saving" : submit}</Button></div>
     </form>
   );
 }

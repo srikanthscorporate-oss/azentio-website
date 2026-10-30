@@ -50,3 +50,6 @@ PLAN.md
 
 # Directories
 artifacts/
+# python
+__pycache__/
+*.pyc

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireClientWorkspace } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { invite, revokeInvite, setMemberRole, setMemberStatus } from "@/app/actions/members";
+import { setParticipation } from "@/app/actions/federated";
 import { Badge, Button, Card, Container, Notice, PageHeader, fmtDate, label } from "@/components/ui";
 
 export default async function Members({ searchParams }: PageProps<"/client/members">) {
@@ -9,10 +10,12 @@ export default async function Members({ searchParams }: PageProps<"/client/membe
   const { viewer, org } = await requireClientWorkspace();
   if (!org.roles.includes("client_admin")) redirect("/forbidden");
   const supabase = await createClient();
-  const [{ data: members }, { data: invites }] = await Promise.all([
+  const [{ data: members }, { data: invites }, { data: fl }] = await Promise.all([
     supabase.from("memberships").select("id, status, user_id, profiles(email, full_name), role_grants(role)").eq("org_id", org.orgId),
     supabase.from("invitations").select("id, email, role, expires_at, accepted_at, revoked_at, created_at").eq("org_id", org.orgId).order("created_at", { ascending: false }),
+    supabase.from("fl_participants").select("status, decided_at").eq("org_id", org.orgId).maybeSingle(),
   ]);
+  const optedIn = fl?.status === "opted_in";
   const inviteState = (i: { accepted_at: string | null; revoked_at: string | null; expires_at: string }) =>
     i.accepted_at ? "accepted" : i.revoked_at ? "revoked" : new Date(i.expires_at) < new Date() ? "expired" : "pending";
 
@@ -29,6 +32,24 @@ export default async function Members({ searchParams }: PageProps<"/client/membe
             <select id="role" name="role" className="input"><option value="client_member">Client member</option><option value="client_admin">Client admin</option></select></div>
           <Button>Create invitation</Button>
         </form>
+      </Card>
+
+      <Card className="mb-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="font-semibold">Federated learning programme</p>
+            <p className="mt-1 text-sm text-muted">
+              Optional and separate from this workspace and from contribution sharing. If you opt in, a training job runs in your own environment
+              and only bounded model updates are sent for aggregation, never your records. Withdrawing stops future participation; updates already
+              aggregated into earlier model versions cannot be removed.
+            </p>
+            <p className="mt-2 text-sm">Status: <Badge tone={optedIn ? "brand" : "neutral"}>{optedIn ? "Opted in" : fl ? "Withdrawn" : "Not enrolled"}</Badge></p>
+          </div>
+          <form action={setParticipation}>
+            <input type="hidden" name="status" value={optedIn ? "withdrawn" : "opted_in"} />
+            <Button variant={optedIn ? "danger" : "primary"}>{optedIn ? "Withdraw" : "Opt in"}</Button>
+          </form>
+        </div>
       </Card>
 
       <h2 className="mb-3 font-semibold">Members</h2>

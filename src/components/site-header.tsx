@@ -3,13 +3,21 @@ import { Bell } from "lucide-react";
 import { getViewer, hasPlatformRole } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
 import { signOut, switchWorkspace } from "@/app/actions/session";
+import { PortalNav } from "@/components/portal-nav";
+import { MenuOverlay } from "@/components/menu-overlay";
+import { HeaderShell } from "@/components/header-shell";
+import { Logo } from "@/components/logo";
 
-const PUBLIC_NAV = [
+export const PUBLIC_NAV = [
   ["/products", "Products"],
+  ["/solutions", "Solutions"],
+  ["/lab", "AI Lab"],
+  ["/technology", "Technology"],
   ["/media", "Media"],
+  ["/live", "Live"],
   ["/insights", "Insights"],
   ["/about", "About"],
-  ["/hackathon/register", "Hackathons"],
+  ["/connect", "Request a demo"],
 ] as const;
 
 export async function SiteHeader() {
@@ -29,48 +37,41 @@ export async function SiteHeader() {
   if (hasPlatformRole(v, "publisher")) portal.push(["/publisher", "Publishing"]);
   if (hasPlatformRole(v, "portal_admin")) portal.push(["/admin", "Admin"]);
 
+  const menuFooter = v ? (
+    <div className="grid gap-4 text-sm">
+      <p className="text-white/60">Signed in as {v.name}{v.active && <> · {v.active.orgName}</>}</p>
+      {v.memberships.length > 1 && (
+        <form action={switchWorkspace} className="flex gap-2">
+          <select name="orgId" defaultValue={v.active?.orgId} aria-label="Active workspace" className="min-w-0 flex-1 rounded-lg border border-white/20 bg-navy px-2 py-2 text-white">
+            {v.memberships.map((m) => <option key={m.orgId} value={m.orgId}>{m.orgName}</option>)}
+          </select>
+          <button className="rounded-lg border border-white/25 px-3 py-2 hover:border-brand">Switch</button>
+        </form>
+      )}
+      <form action={signOut}><button className="line-link">Sign out</button></form>
+    </div>
+  ) : (
+    <div className="flex flex-wrap gap-6 text-sm">
+      <Link href="/login" className="line-link">Client & employee sign in</Link>
+      <Link href="/hackathon/register" className="line-link">Hackathons</Link>
+    </div>
+  );
+
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-surface/90 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-        <Link href="/" className="text-xl font-semibold tracking-tight">
-          <span className="text-brand">azentio</span><span className="text-navy">.ai</span>
-        </Link>
-        <nav className="flex flex-wrap gap-4 text-sm text-muted">
-          {PUBLIC_NAV.map(([href, l]) => <Link key={href} href={href} className="hover:text-ink">{l}</Link>)}
-        </nav>
-        <div className="ml-auto flex flex-wrap items-center gap-3 text-sm">
-          {v ? (
-            <>
-              {v.memberships.length > 1 && (
-                <form action={switchWorkspace} className="flex items-center gap-1">
-                  <select name="orgId" defaultValue={v.active?.orgId} className="rounded-lg border border-line bg-surface px-2 py-1 text-sm" aria-label="Active workspace">
-                    {v.memberships.map((m) => <option key={m.orgId} value={m.orgId}>{m.orgName}</option>)}
-                  </select>
-                  <button className="rounded-lg border border-line px-2 py-1">Switch</button>
-                </form>
-              )}
-              {v.memberships.length === 1 && v.active && <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-medium text-brand-ink">{v.active.orgName}</span>}
-              <Link href="/notifications" className="relative" aria-label={`${unread} unread notifications`}>
-                <Bell size={18} />
-                {unread > 0 && <span className="absolute -right-2 -top-2 rounded-full bg-brand px-1.5 text-[10px] font-bold text-navy">{unread}</span>}
-              </Link>
-              <form action={signOut}><button className="text-muted hover:text-ink">Sign out</button></form>
-            </>
-          ) : (
-            <>
-              <Link href="/login" className="text-muted hover:text-ink">Sign in</Link>
-              <Link href="/connect" className="rounded-lg bg-navy px-3 py-1.5 font-medium text-white">Request demo</Link>
-            </>
+    <HeaderShell below={portal.length > 0 ? <div className="border-t border-white/10 bg-navy-deep/90 backdrop-blur"><PortalNav items={portal} /></div> : undefined}>
+      <div className="flex items-center justify-between gap-4 px-4 py-4 md:px-8 lg:px-12">
+        <Logo />
+        <div className="flex items-center gap-2 sm:gap-3">
+          {v?.active && <span className="hidden max-w-52 truncate rounded-lg bg-[#0e0e0e99] px-3 py-2 text-xs font-medium backdrop-blur-[5px] md:inline">{v.active.orgName}</span>}
+          {v && (
+            <Link href="/notifications" className="relative grid h-10 w-10 place-items-center rounded-lg bg-[#0e0e0e99] backdrop-blur-[5px]" aria-label={`Notifications, ${unread} unread`}>
+              <Bell size={17} />
+              {unread > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-navy">{unread}</span>}
+            </Link>
           )}
+          <MenuOverlay primary={PUBLIC_NAV} portal={portal} footer={menuFooter} />
         </div>
       </div>
-      {portal.length > 0 && (
-        <div className="border-t border-line bg-bg">
-          <nav className="mx-auto flex max-w-6xl flex-wrap gap-4 px-4 py-2 text-sm">
-            {portal.map(([href, l]) => <Link key={href} href={href} className="font-medium text-brand-ink hover:underline">{l}</Link>)}
-          </nav>
-        </div>
-      )}
-    </header>
+    </HeaderShell>
   );
 }

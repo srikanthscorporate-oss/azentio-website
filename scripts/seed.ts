@@ -78,6 +78,14 @@ async function main() {
       await must(admin.from("entitlements").upsert(list.map((s) => ({ org_id: orgId(org), offering_id: offId(s) }))), "entitlements");
   }
 
+  // ---- federated programme opt-ins (synthetic), with consent history
+  const { count: flCount } = await admin.from("fl_participants").select("*", { count: "exact", head: true });
+  if (!flCount) {
+    const fl = ["northwind-bank", "meridian-finance", "sunda-coop", "atlas-insurance"].map((s) => ({ org_id: orgId(s), status: "opted_in" }));
+    await must(admin.from("fl_participants").insert(fl), "fl participants");
+    await must(admin.from("fl_consent_history").insert(fl), "fl history");
+  }
+
   // ---- personas
   const { data: existing } = await admin.auth.admin.listUsers({ perPage: 200 });
   const userIds: Record<string, string> = {};
@@ -206,6 +214,10 @@ async function main() {
   await must(po.rpc("set_idea_status", { p_idea: idea.id, p_status: "under_review", p_note: "Linked to Seasonality context theme",
     p_public_update: "We are reviewing how to explain seasonal patterns in comparisons. This is under review and not a committed delivery." }), "status");
 
+  const emp = await as("employee@azentio.com");
+  await must(emp.from("experiments").insert({ title: "Seasonal baseline prototype for ratio comparisons", team: "Build Labs team 3",
+    summary: "Testing whether a 3-year seasonal baseline reduces false deterioration flags on the synthetic agri-supply portfolio.", offering_id: fai, status: "running" }), "experiment");
+  await must(admin.from("content_items").update({ owner_id: userIds["publisher@azentio.com"] }).in("kind", ["knowledge", "release_note", "experiment"]), "owners");
   console.log("✓ SME seasonality scenario seeded");
 }
 

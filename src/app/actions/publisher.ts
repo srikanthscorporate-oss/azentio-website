@@ -1,5 +1,6 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { PUBLIC_TAG } from "@/lib/public-data";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
@@ -32,6 +33,7 @@ export async function createContent(fd: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from("content_items").insert({ ...d.data, media_path, owner_id: v.id, is_published: fd.get("publish") === "on" });
   if (error) redirect(`/publisher?error=${encodeURIComponent(error.message)}`);
+  updateTag(PUBLIC_TAG);
   revalidatePath("/", "layout");
   redirect("/publisher");
 }
@@ -40,5 +42,6 @@ export async function togglePublished(fd: FormData) {
   await requirePlatformRole("publisher");
   const supabase = await createClient();
   await supabase.from("content_items").update({ is_published: fd.get("to") === "1", updated_at: new Date().toISOString() }).eq("id", String(fd.get("id")));
+  updateTag(PUBLIC_TAG);
   revalidatePath("/", "layout");
 }

@@ -13,10 +13,12 @@ export default async function Review({ params, searchParams }: PageProps<"/moder
   const supabase = await createClient();
   const { data: c } = await supabase.from("contributions").select("*, offerings(name)").eq("id", id).maybeSingle();
   if (!c) notFound();
-  const [{ data: notes }, { data: events }] = await Promise.all([
+  const [{ data: notes }, { data: events }, { data: similar }] = await Promise.all([
     supabase.from("moderation_notes").select("note, created_at").eq("contribution_id", id).order("created_at"),
     supabase.from("moderation_events").select("action, public_reason, version, created_at").eq("contribution_id", id).order("created_at"),
+    supabase.rpc("similar_shared", { p_text: `${c.title} ${c.body}` }),
   ]);
+  const dupes = ((similar ?? []) as { id: string; title: string; score: number }[]).filter((x) => x.score > 0.15);
   const pending = c.state === "submitted";
 
   return (
@@ -32,6 +34,12 @@ export default async function Review({ params, searchParams }: PageProps<"/moder
             <p className="mt-1 text-sm text-muted">Offering: {c.offerings?.name ?? "Not set"}</p>
           </Card>
           {c.sensitive_flags?.length > 0 && <Notice tone="danger">Automated scan flagged: {c.sensitive_flags.map(label).join(", ")}. Redact before publishing.</Notice>}
+          {dupes.length > 0 && (
+            <Card className="text-sm">
+              <p className="font-semibold">Possible duplicates already published</p>
+              {dupes.map((d) => <p key={d.id}><a href={`/learning/${d.id}`} className="underline">{d.title}</a> <span className="text-muted">({Math.round(d.score * 100)}% text similarity)</span></p>)}
+            </Card>
+          )}
           <Card className="text-sm">
             <p className="font-semibold">Consents</p>
             <p>Publish reviewed copy: <b>{c.consent_publish ? "yes" : "no"}</b> · Attribution: <b>{c.consent_attribution ? "yes" : "no"}</b> · Training: <b>{c.consent_training ? "yes" : "no"}</b></p>
