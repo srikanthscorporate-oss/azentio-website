@@ -1,0 +1,9 @@
+// Clears learning/scenario data so seed.ts can rerun it. Usage: node --env-file=.env.local scripts/reset-learning.ts
+import { createClient } from "@supabase/supabase-js";
+const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
+const none = "00000000-0000-0000-0000-000000000000";
+for (const t of ["improvement_ideas", "themes", "reports", "shared_contributions", "contributions", "notifications", "email_outbox"]) {
+  const { error } = await admin.from(t).delete().neq("id", none);
+  if (error) throw new Error(`${t}: ${error.message}`);
+}
+console.log("✓ learning data cleared");

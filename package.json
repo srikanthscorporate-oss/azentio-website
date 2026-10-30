@@ -1,0 +1,42 @@
+{
+  "name": "azentio-portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:push": "node --env-file=.env.local -e \"require('child_process').execSync('npx supabase db push --db-url '+JSON.stringify(process.env.SUPABASE_DB_URL),{stdio:'inherit'})\"",
+    "db:seed": "node --env-file=.env.local scripts/seed.ts",
+    "db:reset-learning": "node --env-file=.env.local scripts/reset-learning.ts",
+    "test:rls": "node --env-file=.env.local --test tests/rls.test.ts",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.65.0",
+    "next": "16.4.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "resend": "^6.35.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tailwindcss/turbopack": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.3",
+    "supabase": "^2.122.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "type": "module"
+}
