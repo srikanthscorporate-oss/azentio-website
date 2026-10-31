@@ -53,7 +53,7 @@ export async function SiteHeader() {
   ) : (
     <div className="flex flex-wrap gap-6 text-sm">
       <Link href="/login" className="line-link">Client & employee sign in</Link>
-      <Link href="/hackathon/register" className="line-link">Hackathons</Link>
+      <Link href="/hackathon" className="line-link">Hackathons</Link>
     </div>
   );
 

@@ -14,6 +14,8 @@ const instrument = Instrument_Sans({ subsets: ["latin"], weight: ["400", "500", 
 export const metadata: Metadata = {
   title: { default: "azentio.ai", template: "%s · azentio.ai" },
   description: "Build intelligence. Create shared value. Enterprise AI products and a governed collaboration portal.",
+  // iOS Safari otherwise rewrites numbers/emails into links before hydration, which breaks it.
+  formatDetection: { telephone: false, email: false, address: false, date: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

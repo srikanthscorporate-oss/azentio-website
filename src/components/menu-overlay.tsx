@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 type Item = readonly [string, string];
 
 // lpas-style "Menu" pill that opens a full-screen navigation overlay.
+// Any link click or form submit inside the overlay closes it, so navigating never leaves the menu open.
 export function MenuOverlay({ primary, portal, footer }: { primary: readonly Item[]; portal: readonly Item[]; footer: ReactNode }) {
   const [open, setOpen] = useState(false);
   const path = usePathname();
@@ -26,7 +27,7 @@ export function MenuOverlay({ primary, portal, footer }: { primary: readonly Ite
     return (
       <li key={href} style={{ transitionDelay: open ? `${80 + i * 50}ms` : "0ms" }}
         className={clsx("transition duration-500 [transition-timing-function:cubic-bezier(.33,1,.68,1)]", open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0")}>
-        <Link href={href} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined}
+        <Link href={href} aria-current={active ? "page" : undefined}
           className={clsx(big ? "display-md" : "title-sm", "transition-colors", active ? "text-brand" : "text-white/85 hover:text-white")}>{l}</Link>
       </li>
     );
@@ -46,6 +47,7 @@ export function MenuOverlay({ primary, portal, footer }: { primary: readonly Ite
       </button>
 
       <div id="site-menu" ref={panel} role="dialog" aria-modal="true" aria-label="Site menu" hidden={!open} data-lenis-prevent
+        onClick={(e) => { if ((e.target as HTMLElement).closest("a")) setOpen(false); }} onSubmit={() => setOpen(false)}
         className="fixed inset-0 z-50 overflow-y-auto bg-navy-deep/97 text-white backdrop-blur-sm">
         <div className="mx-auto grid min-h-full max-w-6xl gap-12 px-4 pb-12 pt-28 md:grid-cols-[1.4fr_1fr] md:px-8">
           <nav aria-label="Main">

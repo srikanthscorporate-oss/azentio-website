@@ -55,6 +55,8 @@ body {
 }
 
 .hero-glow { background-color: var(--navy); background-image: var(--hero-glow); }
+/* Soft ripple texture used on dark brand panels (replaces the old square grid) */
+.ripples { background-image: repeating-radial-gradient(circle at 78% 42%, rgba(184,239,181,.10) 0 1px, transparent 1.5px 56px); mask-image: radial-gradient(ellipse at 78% 42%, black, transparent 68%); }
 .panel-glow { background-color: var(--navy-deep); background-image: radial-gradient(ellipse at 75% 60%, #1f4a4a 0, transparent 55%); }
 
 /* Type scale converted from lpas.com (1rem = 16px here). One weight (400), sentence case. */
@@ -135,4 +137,35 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--brand-ink); }
   .intro-title { grid-column: main-start / span 15; }
   .intro-tag { grid-column: main-start / span 6; }
   .intro-body { grid-column: 11 / main-end; }
+}
+
+/* Load intro: light brand wash, 3D web (canvas), extruded 3D wordmark that flips in, sways, then flies past the camera */
+.intro-loader {
+  background:
+    radial-gradient(ellipse 70% 60% at 18% 12%, #dff5e7 0, transparent 60%),
+    radial-gradient(ellipse 65% 55% at 85% 85%, #d6eeec 0, transparent 60%),
+    linear-gradient(160deg, #f8fbfa 0%, #eef7f2 50%, #e5f1ef 100%);
+  animation: intro-out .8s var(--ease-inout) 2.95s forwards;
+}
+.intro-stage { perspective: 1100px; }
+.intro-word { transform-style: preserve-3d; animation: intro-sway 1.5s var(--ease-inout) 1.15s both, intro-fly .8s cubic-bezier(.6,0,.9,.4) 2.6s forwards; }
+.intro-letter {
+  display: inline-block; color: var(--navy); opacity: 0; transform-origin: 50% 100%;
+  transform: translateZ(-260px) rotateX(-105deg);
+  text-shadow: 0 1px 0 #2a3060, 0 2px 0 #30376a, 0 3px 0 #363e73, 0 4px 0 #3c447c, 0 5px 0 #424b85,
+    0 10px 14px rgba(23,27,58,.18), 0 22px 40px rgba(36,116,71,.16);
+  animation: intro-flip 1s var(--ease-reveal) forwards;
+}
+.intro-ai {
+  color: #2fae6a;
+  text-shadow: 0 1px 0 #2a9f61, 0 2px 0 #269158, 0 3px 0 #22834f, 0 4px 0 #1e7547, 0 5px 0 #1a683f,
+    0 10px 14px rgba(36,116,71,.22), 0 22px 40px rgba(105,211,147,.25);
+}
+@keyframes intro-flip { to { opacity: 1; transform: none; } }
+@keyframes intro-sway { 0% { transform: rotateX(0) rotateY(0); } 45% { transform: rotateX(14deg) rotateY(-12deg); } 100% { transform: rotateX(6deg) rotateY(4deg); } }
+@keyframes intro-fly { from { transform: rotateX(6deg) rotateY(4deg); } to { transform: translateZ(900px) rotateX(-8deg); opacity: 0; filter: blur(6px); } }
+@keyframes intro-out { to { opacity: 0; visibility: hidden; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-loader { display: none; }
 }

@@ -1,24 +1,16 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUp } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 const COLS: [string, [string, string][]][] = [
   ["Explore", [["/products", "Products"], ["/solutions", "Solutions"], ["/lab", "AI Lab"], ["/technology", "Technology"]]],
   ["Discover", [["/media", "Media"], ["/live", "Live"], ["/insights", "Insights"], ["/about", "About"]]],
-  ["Connect", [["/connect", "Request demo"], ["/connect?interest=collaboration", "Collaborate"], ["/hackathon/register", "Hackathons"], ["/login", "Client & employee sign in"]]],
+  ["Connect", [["/connect", "Request demo"], ["/connect?interest=collaboration", "Collaborate"], ["/hackathon", "Hackathons"], ["/login", "Client & employee sign in"]]],
 ];
 
 export function SiteFooter() {
   return (
     <footer className="text-white">
-      {/* Brand band: the same navy glow and mint grid used across the site, leading into the footer */}
-      <div className="hero-glow relative overflow-hidden">
-        <div aria-hidden className="absolute inset-0 opacity-25 [background-image:linear-gradient(#b8efb5_1px,transparent_0),linear-gradient(90deg,#b8efb5_1px,transparent_0)] [background-size:4rem_4rem] [mask-image:radial-gradient(ellipse_at_75%_50%,black,transparent_70%)]" />
-        <div className="relative mx-auto flex max-w-[100rem] flex-wrap items-end justify-between gap-8 px-4 py-16 md:px-8 md:py-24 lg:px-12">
-          <p className="display-lg max-w-3xl">Build Intelligence.<br /><span className="text-brand">Create Impact.</span></p>
-          <Link href="/connect" className="group line-link pb-1">Start a conversation <span className="circle-btn"><ArrowRight size={14} aria-hidden /></span></Link>
-        </div>
-      </div>
       <div className="bg-navy-deep">
         <div className="mx-auto grid max-w-[100rem] gap-12 px-4 py-14 md:grid-cols-[1fr_auto] md:px-8 lg:px-12">
           <div className="grid gap-10 sm:grid-cols-3">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Plus } from "lucide-react";
 import { getOfferings, getPublicContent } from "@/lib/public-data";
 import { HeroVideo } from "@/components/hero-video";
+import { IntroLoader } from "@/components/intro-loader";
 import { SmoothScroll } from "@/components/smooth-scroll";
 import { HScroll } from "@/components/h-scroll";
 import { HoverList } from "@/components/hover-list";
@@ -13,7 +14,8 @@ import { videoCategory, videoIdFromUrl } from "@/lib/videos";
 // Public page: validated in dev to render an instant static shell.
 export const instant = true;
 
-const HERO_VIDEO = "j7M-k4HnOJc"; // Azentio Loan Origination walkthrough: clean 3D brand footage in the opening seconds
+// Kept off the home page: the loan origination walkthrough stays on /media only.
+const HIDDEN_ON_HOME = new Set(["j7M-k4HnOJc"]);
 
 const CAPABILITIES = [
   ["Intelligent Decisioning", "Turn policies, evidence and data into informed recommendations."],
@@ -41,16 +43,17 @@ const PANELS = [
 
 export default async function Home() {
   const [offerings, videos, insights] = await Promise.all([getOfferings(), getPublicContent("video"), getPublicContent("insight")]);
-  const stories = videos.map((v) => ({ ...v, vid: videoIdFromUrl(v.external_url) })).filter((v) => v.vid).map((v) => ({ ...v, cat: videoCategory(v.vid) }));
+  const stories = videos.map((v) => ({ ...v, vid: videoIdFromUrl(v.external_url) })).filter((v) => v.vid && !HIDDEN_ON_HOME.has(v.vid)).map((v) => ({ ...v, cat: videoCategory(v.vid) }));
   const counts = stories.reduce<Record<string, number>>((a, s) => ({ ...a, [s.cat]: (a[s.cat] ?? 0) + 1 }), {});
   const [big, ...small] = stories;
 
   return (
     <>
+      <IntroLoader />
       <SmoothScroll />
       {/* 1. Hero: full-bleed video, detail labels at mid height, headline bottom left */}
       <section className="relative min-h-[100svh] overflow-hidden text-white">
-        <HeroVideo id={HERO_VIDEO} start={2} end={18} />
+        <HeroVideo />
         <div className="relative grid min-h-[100svh] grid-rows-[1fr_auto_1fr] px-4 pb-10 pt-24 md:px-8 lg:px-12">
           <div />
           <div className="flex flex-wrap items-center gap-x-16 gap-y-2 text-sm font-medium">
@@ -74,8 +77,8 @@ export default async function Home() {
             return (
               <article key={o.slug} className="grid w-full grid-cols-[72%_28%] lg:h-full lg:w-[min(52rem,62vw)] lg:grid-cols-1 lg:grid-rows-[minmax(0,1fr)_15rem]">
                 <div className="hero-glow relative order-2 min-h-44 overflow-hidden lg:order-1">
-                  <div aria-hidden className="absolute inset-0 opacity-30 [background-image:linear-gradient(#b8efb5_1px,transparent_0),linear-gradient(90deg,#b8efb5_1px,transparent_0)] [background-size:3rem_3rem] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
-                  <div className="hidden lg:block"><ProductMock slug={o.slug} /></div>
+                  <div aria-hidden className="absolute inset-0 ripples" />
+                  <ProductMock slug={o.slug} />
                   <p className="absolute bottom-4 right-5 hidden max-w-xs text-right text-sm text-white/70 lg:block">{o.category}</p>
                 </div>
                 <Link href={`/products/${o.slug}`} style={{ backgroundColor: bg }}
